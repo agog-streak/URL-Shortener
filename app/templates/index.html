@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>URL Shortener</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+
+            width: 500px;
+            max-width: 90%;
+
+            padding: 30px;
+            border-radius: 12px;
+
+            box-shadow:
+                0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+
+            padding: 12px;
+            margin-bottom: 10px;
+
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+
+            padding: 12px;
+
+            border: none;
+            border-radius: 6px;
+
+            background: #333;
+            color: white;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        #result {
+            margin-top: 20px;
+            word-break: break-all;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>URL Shortener</h1>
+
+    <p>
+        Введите длинную ссылку:
+    </p>
+
+    <input
+        type="url"
+        id="urlInput"
+        placeholder="https://example.com"
+    >
+
+    <button onclick="shortenUrl()">
+        Сократить
+    </button>
+
+    <div id="result"></div>
+
+</div>
+
+
+<script>
+
+async function shortenUrl() {
+
+    // Получаем значение из input.
+    const url = document
+        .getElementById("urlInput")
+        .value;
+
+    // Проверяем, что пользователь
+    // что-нибудь ввёл.
+    if (!url) {
+
+        document.getElementById("result").innerHTML =
+            '<p class="error">Введите URL</p>';
+
+        return;
+    }
+
+    try {
+
+        // Отправляем POST-запрос Flask API.
+        const response = await fetch("/shorten", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                url: url
+            })
+        });
+
+        // Преобразуем ответ сервера
+        // из JSON в JavaScript-объект.
+        const data = await response.json();
+
+        // Если сервер вернул ошибку.
+        if (!response.ok) {
+
+            document.getElementById("result").innerHTML =
+                `<p class="error">${data.error}</p>`;
+
+            return;
+        }
+
+        // Показываем короткую ссылку.
+        document.getElementById("result").innerHTML = `
+            <p>
+                Ваша короткая ссылка:
+            </p>
+
+            <a
+                href="${data.short_url}"
+                target="_blank"
+            >
+                ${data.short_url}
+            </a>
+
+            <p>
+                Переходов: ${data.clicks}
+            </p>
+        `;
+
+    } catch (error) {
+
+        // Ошибка соединения с сервером.
+        document.getElementById("result").innerHTML =
+            '<p class="error">Ошибка соединения с сервером</p>';
+    }
+}
+
+</script>
+
+</body>
+</html>
